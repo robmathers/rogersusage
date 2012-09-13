@@ -31,6 +31,6 @@ This is provided as-is, with no warranty or guarantee it will work of any kind. 
 [soup dl]: http://www.crummy.com/software/BeautifulSoup/#Download
 [python]: http://www.python.org/
 [rogers]: http://www.rogers.com
-[My Rogers]: https://www.rogers.com/web/RogersServices.portal?_nfpb=true&amp;_pageLabel=My Rogers_Home
+[my rogers]: https://www.rogers.com/web/RogersServices.portal?_nfpb=true&amp;_pageLabel=My%20Rogers_Home
 [mechanize]: http://wwwsearch.sourceforge.net/mechanize/
 [mechanize dl]: http://wwwsearch.sourceforge.net/mechanize/download.html
