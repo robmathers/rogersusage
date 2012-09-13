@@ -3,12 +3,13 @@
 # Rogers Internet Usage Parsing Script
 
 # **Enter login details here**
-username = "SOMEUSER"
-password = "SOMEPASS"
+username = ''
+password = ''
 
 import os
 import re
 import warnings
+from getpass import getpass
 import mechanize
 import cookielib
 from BeautifulSoup import BeautifulSoup
@@ -41,6 +42,11 @@ def clean_output(data):
     data = correct_space(data)
     data = os.linesep.join([s for s in data.splitlines() if s]) # remove empty lines
     return data
+
+# get login details interactively if they haven't been hard-coded
+if username == '' or password == '':
+    username = raw_input("Login ID: ")
+    password = getpass("Password: ")
 
 # mechanize boilerplate from http://stockrt.github.com/p/emulating-a-browser-in-python-with-mechanize/
 
