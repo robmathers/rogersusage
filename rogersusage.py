@@ -13,6 +13,7 @@ from getpass import getpass
 import mechanize
 import cookielib
 from BeautifulSoup import BeautifulSoup
+from optparse import OptionParser, OptionGroup
 
 # ignore gzip warning
 warnings.filterwarnings('ignore', 'gzip', UserWarning)
@@ -42,6 +43,20 @@ def clean_output(data):
     data = correct_space(data)
     data = os.linesep.join([s for s in data.splitlines() if s]) # remove empty lines
     return data
+
+# define command line options
+parser = OptionParser()
+group = OptionGroup(parser, "Login Options", "If a login ID or password is provided, it will override any provided in the script file.")
+group.add_option("-l", "--login", action="store", dest="username", help="Rogers login ID")
+group.add_option("-p", "--password", action="store", dest="password", help="Rogers login password")
+parser.add_option_group(group)
+
+# parse command line options
+(options, args) = parser.parse_args()
+if options.username != None:
+    username = options.username
+if options.password != None:
+    password = options.password
 
 # get login details interactively if they haven't been hard-coded
 if username == '':
