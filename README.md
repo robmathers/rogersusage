@@ -9,16 +9,22 @@ A python script to get internet usage data for customers of [Rogers][] cable int
  
 ## Usage
 ### Configuration
-The script will prompt for your My Rogers login details, but if you prefer to, you can hard-code them in the script.
-Open the script file in a text editor, and look for the lines with the login details:
+The script needs the My Rogers login ID (typically an email address) and password, which can be provided in one of three ways:
 
-    username = ''
-    password = ''
+1. Command line parameters. `-l USERNAME` or `--login=USERNAME` and `-p PASSWORD` or `--password=PASSWORD`. These will override any login details provided in the script file.
+2. In the script file. Open `rogersusage.py` in a text editor, and look for the lines with the login details:
 
-Enter your user name and password between the quotes, then save the file.        
+        username = ''
+        password = ''
+
+    Enter your user name and password between the quotes, then save the file.
+3. Interactively. If the script is not provided login details, it will prompt for them when run.
 
 ### Running the script
 Open a command prompt, and run `python rogersusage.py`. You may need to adjust the paths to your python executable and the script as necessary.
+
+### Displaying help
+Execute the script with the `-h` or `--help` flags (i.e. `python /path/to/rogersusage.py -h` to print a help message with a description of the options.
 
 ### Sample Output
     Download Usage:
