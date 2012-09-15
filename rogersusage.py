@@ -50,6 +50,7 @@ def clean_output(data):
 
 # define command line options
 parser = OptionParser()
+parser.add_option("-t", "--totals", action="store_true", dest="totals_only", help="Output only the total usage and usage allowance amounts.")
 parser.add_option("--csv", action="store_true", dest="csv", help="Print the data only (no labels or units) as comma-separated values. Format: Download,Upload,Total,Cap Amount. Units: GB. Useful for importing or parsing the data into other programs.")
 group = OptionGroup(parser, "Login Options", "If a login ID or password is provided, it will override any provided in the script file.")
 group.add_option("-l", "--login", action="store", dest="username", help="Rogers login ID")
@@ -119,13 +120,20 @@ usage = table.findAll('tr')[3]
 cap = table.findAll('tr')[4]
 
 if options.csv:
-    downloadvalue = remove_units(clean_output(download.findAll('td')[1]))
-    uploadvalue = remove_units(clean_output(upload.findAll('td')[1]))
-    usagevalue = remove_units(clean_output(usage.findAll('td')[1]))
-    capvalue = remove_units(clean_output(cap.findAll('td')[1]))
-    print downloadvalue + "," + uploadvalue + "," + usagevalue + "," + capvalue
+    download_value = remove_units(clean_output(download.findAll('td')[1]))
+    upload_value = remove_units(clean_output(upload.findAll('td')[1]))
+    usage_value = remove_units(clean_output(usage.findAll('td')[1]))
+    cap_value = remove_units(clean_output(cap.findAll('td')[1]))
+    
+    output_string = usage_value + "," + cap_value
+    
+    if not options.totals_only:
+        output_string = download_value + "," + upload_value + "," + output_string
+        
+    print output_string
 else:
-    print clean_output(download)
-    print clean_output(upload)
+    if not options.totals_only:
+        print clean_output(download)
+        print clean_output(upload)
     print clean_output(usage)
     print clean_output(cap)
