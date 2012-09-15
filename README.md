@@ -26,6 +26,8 @@ The script needs the My Rogers login ID (typically an email address) and passwor
 ### Options
  - `-h`, `--help`
     - Print a help message with a description of the options
+ - `-t`, `--totals`
+    - Output only the total usage and usage allowance amounts.
  - `--csv`
     - Print the data only (no labels or units) as comma-separated values. Format: Download,Upload,Total,Cap Amount. Units: GB. Useful for  importing or parsing the data into other programs.
  - `-l USERNAME`, `--login=USERNAME`
