@@ -44,8 +44,11 @@ def clean_output(data):
     return data
 
 # get login details interactively if they haven't been hard-coded
-if username == '' or password == '':
+if username == '':
     username = raw_input("Login ID: ")
+
+if  password == '':
+    print "Login ID:", username
     password = getpass("Password: ")
 
 # mechanize boilerplate from http://stockrt.github.com/p/emulating-a-browser-in-python-with-mechanize/
