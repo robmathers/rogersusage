@@ -21,10 +21,10 @@ The script needs the My Rogers login ID (typically an email address) and passwor
 3. Interactively. If the script is not provided login details, it will prompt for them when run.
 
 ### Running the script
-Open a command prompt, and run `python rogersusage.py`. You may need to adjust the paths to your python executable and the script as necessary.
+Open a command prompt, and run `python rogersusage.py`. Provide the full paths to the python executable and the script as necessary.
 
 ### Displaying help
-Execute the script with the `-h` or `--help` flags (i.e. `python /path/to/rogersusage.py -h` to print a help message with a description of the options.
+Execute the script with the `-h` or `--help` flags (i.e. `python rogersusage.py -h`) to print a help message with a description of the options.
 
 ### Sample Output
     Download Usage:
