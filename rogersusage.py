@@ -34,6 +34,10 @@ def remove_parens(data):
 def correct_space(data):
     p = re.compile(r'&nbsp;')
     return p.sub(' ', data)
+    
+def remove_units(data):
+    p = re.compile(r' GB')
+    return p.sub('', data)
 
 def clean_output(data):
     data = str(data)
@@ -46,6 +50,7 @@ def clean_output(data):
 
 # define command line options
 parser = OptionParser()
+parser.add_option("--csv", action="store_true", dest="csv", help="Print the data only (no labels or units) as comma-separated values. Format: Download,Upload,Total,Cap Amount. Units: GB. Useful for importing or parsing the data into other programs.")
 group = OptionGroup(parser, "Login Options", "If a login ID or password is provided, it will override any provided in the script file.")
 group.add_option("-l", "--login", action="store", dest="username", help="Rogers login ID")
 group.add_option("-p", "--password", action="store", dest="password", help="Rogers login password")
@@ -61,9 +66,9 @@ if options.password != None:
 # get login details interactively if they haven't been hard-coded
 if username == '':
     username = raw_input("Login ID: ")
-
+elif password == '':            # print a username reminder if a login id was provided
+    print "Login ID:", username # but a password was not
 if  password == '':
-    print "Login ID:", username
     password = getpass("Password: ")
 
 # mechanize boilerplate from http://stockrt.github.com/p/emulating-a-browser-in-python-with-mechanize/
@@ -113,7 +118,14 @@ upload = table.findAll('tr')[2]
 usage = table.findAll('tr')[3]
 cap = table.findAll('tr')[4]
 
-print clean_output(download)
-print clean_output(upload)
-print clean_output(usage)
-print clean_output(cap)
+if options.csv:
+    downloadvalue = remove_units(clean_output(download.findAll('td')[1]))
+    uploadvalue = remove_units(clean_output(upload.findAll('td')[1]))
+    usagevalue = remove_units(clean_output(usage.findAll('td')[1]))
+    capvalue = remove_units(clean_output(cap.findAll('td')[1]))
+    print downloadvalue + "," + uploadvalue + "," + usagevalue + "," + capvalue
+else:
+    print clean_output(download)
+    print clean_output(upload)
+    print clean_output(usage)
+    print clean_output(cap)
