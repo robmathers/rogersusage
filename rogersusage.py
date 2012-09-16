@@ -2,10 +2,6 @@
 
 # Rogers Internet Usage Parsing Script
 
-# **Enter login details here**
-username = ''
-password = ''
-
 import sys
 import os
 import re
@@ -15,6 +11,7 @@ import mechanize
 import cookielib
 from BeautifulSoup import BeautifulSoup
 from optparse import OptionParser, OptionGroup
+from ConfigParser import SafeConfigParser
 
 # try loading keyring module (https://bitbucket.org/kang/python-keyring-lib/)
 try:
@@ -67,19 +64,38 @@ group.add_option("-l", "--login", action="store", dest="username", help="Rogers 
 group.add_option("-p", "--password", action="store", dest="password", help="Rogers login password")
 parser.add_option_group(group)
 
-# parse command line options
+# initialize user/pass
+username = None
+password = None
+
+# parse command line options for login
 (options, args) = parser.parse_args()
 if options.username != None:
     username = options.username
+    write_configfile = True
 if options.password != None:
     password = options.password
+    
+# get username from config if it hasn't been loaded from command line
+configfile = 'myrogers_config'
+userconfig = SafeConfigParser()
+
+if username == None:
+    userconfig.read(configfile)
+    if userconfig.has_section('myrogers_login'):
+        username = userconfig.get('myrogers_login', 'username')
+        write_configfile = False
+    else:
+        #no username configured
+        write_configfile = True
 
 # get login details interactively if they haven't been hard-coded
-if username == '':
+if username == None or username == '':
     username = raw_input("Login ID: ")
-elif password == '':            # print a username reminder if a login id was provided
-    print "Login ID:", username # but a password was not
-if  password == '':
+elif password == None or password == '':    # print a username reminder if a login id was provided
+    print "Login ID:", username             # but a password was not
+
+if  password == None or password == '':
     password = getpass("Password: ")
 
 # mechanize boilerplate from http://stockrt.github.com/p/emulating-a-browser-in-python-with-mechanize/
@@ -126,6 +142,10 @@ if len(authent_cookies) == 0:
     sys.exit("Login failed")    
 else:
     # login was successful
+    if write_configfile:
+        userconfig.add_section('myrogers_login')
+        userconfig.set('myrogers_login', 'username', username)
+        userconfig.write(open(configfile, 'w'))
     pass
 
 # parse for usage data
