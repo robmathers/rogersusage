@@ -15,6 +15,15 @@ import cookielib
 from BeautifulSoup import BeautifulSoup
 from optparse import OptionParser, OptionGroup
 
+# try loading keyring module (https://bitbucket.org/kang/python-keyring-lib/)
+try:
+    import keyring
+except ImportError:
+    keyring_present = false
+    pass
+else:
+    keyring_present = true
+
 # ignore gzip warning
 warnings.filterwarnings('ignore', 'gzip', UserWarning)
 
