@@ -73,7 +73,7 @@ print_username_reminder = True
 (options, args) = parser.parse_args()
 if options.username != None:
     username = options.username
-    write_configfile = True
+    store_username = True
 if options.password != None:
     password = options.password
     
@@ -85,10 +85,10 @@ if username == None or username == '':
     userconfig.read(configfile)
     if userconfig.has_section('myrogers_login'):
         username = userconfig.get('myrogers_login', 'username')
-        write_configfile = False
+        store_username = False
     else:
         #no username configured
-        write_configfile = True
+        store_username = True
 
 # get username interactively if it hasn't been loaded yet
 if username == None or username == '':
@@ -100,8 +100,9 @@ if password == None or password == '':
     if keyring_present:
         if keyring.get_password('myrogers_login', username) != None:
             password = keyring.get_password('myrogers_login', username)
+            store_password = False
         else:
-            write_configfile = True
+            store_password = True
 
 # if password isn't in the keychain, get it interactively
 if password == None or password == '':
@@ -109,7 +110,7 @@ if password == None or password == '':
         print "Login ID:", username
     
     password = getpass("Password: ")
-    write_configfile = True
+    store_password = True
 
 # mechanize boilerplate from http://stockrt.github.com/p/emulating-a-browser-in-python-with-mechanize/
 
@@ -155,13 +156,13 @@ if len(authent_cookies) == 0:
     sys.exit("Login failed")    
 else:
     # login was successful
-    if write_configfile:
+    if store_username:
         userconfig.add_section('myrogers_login')
         userconfig.set('myrogers_login', 'username', username)
         userconfig.write(open(configfile, 'w'))
         
-        if keyring_present:
-            keyring.set_password('myrogers_login', username, password)
+    if keyring_present and store_password:
+        keyring.set_password('myrogers_login', username, password)
 
 # parse for usage data
 soup = BeautifulSoup(session.response().read())
