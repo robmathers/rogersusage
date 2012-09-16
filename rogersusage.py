@@ -6,6 +6,7 @@
 username = ''
 password = ''
 
+import sys
 import os
 import re
 import warnings
@@ -43,7 +44,7 @@ def remove_parens(data):
 def correct_space(data):
     p = re.compile(r'&nbsp;')
     return p.sub(' ', data)
-    
+
 def remove_units(data):
     p = re.compile(r' GB')
     return p.sub('', data)
@@ -118,6 +119,14 @@ session.select_form(nr=2)
 session.form['USER'] = username
 session.form['password'] = password
 session.submit()
+
+# check if login was successful
+authent_cookies = [cookie for cookie in cj if cookie.name == 'SM_USERAUTHENTICATED']
+if len(authent_cookies) == 0:
+    sys.exit("Login failed")    
+else:
+    # login was successful
+    pass
 
 # parse for usage data
 soup = BeautifulSoup(session.response().read())
