@@ -61,6 +61,7 @@ parser.add_option("--csv", action="store_true", dest="csv", help="Print the data
 group = OptionGroup(parser, "Login Options", "If a login ID or password is provided, it will override any provided in the script file.")
 group.add_option("-l", "--login", action="store", dest="username", help="Rogers login ID")
 group.add_option("-p", "--password", action="store", dest="password", help="Rogers login password")
+group.add_option("--no-save", action="store_true", dest="dont_save_login", help="Don't save login details")
 parser.add_option_group(group)
 
 # initialize user/pass
@@ -156,13 +157,14 @@ if len(authent_cookies) == 0:
     sys.exit("Login failed")    
 else:
     # login was successful
-    if store_username:
-        userconfig.add_section('myrogers_login')
-        userconfig.set('myrogers_login', 'username', username)
-        userconfig.write(open(configfile, 'w'))
-        
-    if keyring_present and store_password:
-        keyring.set_password('myrogers_login', username, password)
+    if not options.dont_save_login:
+        if store_username:
+            userconfig.add_section('myrogers_login')
+            userconfig.set('myrogers_login', 'username', username)
+            userconfig.write(open(configfile, 'w'))
+            
+        if keyring_present and store_password:
+            keyring.set_password('myrogers_login', username, password)
 
 # parse for usage data
 soup = BeautifulSoup(session.response().read())
