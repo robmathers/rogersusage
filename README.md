@@ -6,23 +6,17 @@ A python script to get internet usage data for customers of [Rogers][] cable int
  - [mechanize][]. Install via `easy_install mechanize`, or download it yourself [here][mechanize dl].
  - [BeautifulSoup][] for HTML parsing. `easy_install BeautifulSoup`, or download from [the project site][soup dl].
  - A login for the [My Rogers][] site, used for managing your Rogers account.
+ - *Optional:* the [keyring][] library. If installed, the keyring will be used to securely store passwords. The storage mechanism depends on what OS you're running—on Mac OS X, it uses the system Keychain; read the keyring lib documentation for full details.
  
 ## Usage
 ### Running the script
 Open a command prompt, and run `python rogersusage.py`. Provide the full paths to the python executable and the script as necessary.
 
 ### Configuration
-The script needs the My Rogers login ID (typically an email address) and password, which can be provided in one of three ways:
-
-1. Command line parameters. `-l USERNAME` (or `--login=USERNAME`) and `-p PASSWORD` (or `--password=PASSWORD`). These will override any login details provided in the script file.
-2. In the script file. Open `rogersusage.py` in a text editor, and look for the lines with the login details:
-
-        username = ''
-        password = ''
-
-    Enter your user name and password between the quotes, then save the file.
-3. Interactively. If the script is not provided login details, it will prompt for them when run.
-
+The script will prompt for a My Rogers login ID (typically an email address) and password. You can also provide one with the command line parameters: `-l USERNAME` (or `--login=USERNAME`) and `-p PASSWORD` (or `--password=PASSWORD`). These will supersede any stored login details.
+ 
+ Upon a successful login, the script stores the login ID for later use. If the keyring library is installed, it will also securely store your password.
+ 
 ### Options
  - `-h`, `--help`
     - Print a help message with a description of the options
@@ -55,3 +49,4 @@ This is provided as-is, with no warranty or guarantee it will work of any kind. 
 [my rogers]: https://www.rogers.com/web/RogersServices.portal?_nfpb=true&amp;_pageLabel=My%20Rogers_Home
 [mechanize]: http://wwwsearch.sourceforge.net/mechanize/
 [mechanize dl]: http://wwwsearch.sourceforge.net/mechanize/download.html
+[keyring]: https://bitbucket.org/kang/python-keyring-lib/
