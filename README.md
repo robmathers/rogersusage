@@ -15,7 +15,7 @@ Open a command prompt, and run `python rogersusage.py`. Provide the full paths t
 ### Configuration
 The script will prompt for a My Rogers login ID (typically an email address) and password. You can also provide one with the command line parameters: `-l USERNAME` (or `--login=USERNAME`) and `-p PASSWORD` (or `--password=PASSWORD`). These will supersede any stored login details.
  
- Upon a successful login, the script stores the login ID for later use. If the keyring library is installed, it will also securely store your password.
+ Upon a successful login, the script stores the login ID for later use. If the keyring library is installed, it will also securely store your password. This behaviour can be disabled by using the `--no-save` option.
  
 ### Options
  - `-h`, `--help`
@@ -28,6 +28,8 @@ The script will prompt for a My Rogers login ID (typically an email address) and
     - Rogers login ID
  - `-p PASSWORD`, `--password=PASSWORD`
     - Rogers login password
+ - `--no-save`
+    - Don't save login details
 
 ### Sample Output
     Download Usage:
@@ -40,7 +42,7 @@ The script will prompt for a My Rogers login ID (typically an email address) and
     120 GB
 
 ## Notes
-This is provided as-is, with no warranty or guarantee it will work of any kind. Hopefully someone else will find it useful. It's scraping HTML to get the data, so it will likely break if Rogers makes changes to their site.
+This is provided as-is, with no warranty or guarantee of any kind it will work. Hopefully someone else will find it useful. It's scraping HTML to get the data, so it will likely break if Rogers makes changes to their site.
 
 [BeautifulSoup]: http://www.crummy.com/software/BeautifulSoup/
 [soup dl]: http://www.crummy.com/software/BeautifulSoup/#Download
