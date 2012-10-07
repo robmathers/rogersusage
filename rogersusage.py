@@ -79,7 +79,7 @@ if options.password != None:
     password = options.password
     
 # get username from config if it hasn't been loaded from command line
-configfile = '.rogersusage_config'
+configfile = os.path.expanduser('~/.rogersusage_config')
 userconfig = SafeConfigParser()
 
 if username == None or username == '':
