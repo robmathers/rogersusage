@@ -175,16 +175,17 @@ upload = table.findAll('tr')[2]
 usage = table.findAll('tr')[3]
 cap = table.findAll('tr')[4]
 
+download_value = float(remove_units(clean_output(download.findAll('td')[1])))
+upload_value = float(remove_units(clean_output(upload.findAll('td')[1])))
+usage_value = float(remove_units(clean_output(usage.findAll('td')[1])))
+cap_value = float(remove_units(clean_output(cap.findAll('td')[1])))
+remaining_value = cap_value - usage_value
+
 if options.csv:
-    download_value = remove_units(clean_output(download.findAll('td')[1]))
-    upload_value = remove_units(clean_output(upload.findAll('td')[1]))
-    usage_value = remove_units(clean_output(usage.findAll('td')[1]))
-    cap_value = remove_units(clean_output(cap.findAll('td')[1]))
-    
-    output_string = usage_value + "," + cap_value
+    output_string = str(usage_value) + "," + str(cap_value)
     
     if not options.totals_only:
-        output_string = download_value + "," + upload_value + "," + output_string
+        output_string = str(download_value) + "," + str(upload_value) + "," + output_string + "," + str(remaining_value)
         
     print output_string
 else:
@@ -193,3 +194,4 @@ else:
         print clean_output(upload)
     print clean_output(usage)
     print clean_output(cap)
+    print 'Remaining Usage:\n' + str(remaining_value) + ' GB'
