@@ -194,4 +194,7 @@ else:
         print clean_output(upload)
     print clean_output(usage)
     print clean_output(cap)
-    print 'Remaining Usage:\n' + str(remaining_value) + ' GB'
+    if remaining_value < 0:
+        print 'Overage:\n' + str(abs(remaining_value)) + ' GB'
+    else:
+        print 'Remaining Usage:\n' + str(remaining_value) + ' GB'
