@@ -170,6 +170,10 @@ else:
 soup = BeautifulSoup(session.response().read())
 table = soup.find("table", {"id": "usageInformation"})
 
+if table == None:
+    print 'Could not get usage data. Please try again.'
+    sys.exit(1)
+
 download = table.findAll('tr')[1]
 upload = table.findAll('tr')[2]
 usage = table.findAll('tr')[3]
