@@ -35,7 +35,7 @@ def remove_tabs(data):
 
 def remove_parens(data):
     p = re.compile(r'\(.*\)')
-    return p.sub('', data) 
+    return p.sub('', data)
 
 def correct_space(data):
     p = re.compile(r'&nbsp;')
@@ -53,6 +53,14 @@ def clean_output(data):
     data = correct_space(data)
     data = os.linesep.join([s for s in data.splitlines() if s]) # remove empty lines
     return data
+
+def detectLoginForm(session):
+    for form in session.forms():
+        for control in form.controls:
+            if isinstance(control, mechanize._form.PasswordControl) and control.id == 'txtPassWord':
+                return form
+
+    return None
 
 # define command line options
 parser = OptionParser()
@@ -77,7 +85,7 @@ if options.username != None:
     store_username = True
 if options.password != None:
     password = options.password
-    
+
 # get username from config if it hasn't been loaded from command line
 configfile = os.path.expanduser('~/.rogersusage_config')
 userconfig = SafeConfigParser()
@@ -109,7 +117,7 @@ if password == None or password == '':
 if password == None or password == '':
     if  print_username_reminder:
         print "Login ID:", username
-    
+
     password = getpass("Password: ")
     store_password = True
 
@@ -146,7 +154,11 @@ session.open('https://www.rogers.com/web/myrogers/internetUsageBeta')
 session.open('https://www.rogers.com/web/link/signin')
 
 # login form
-session.select_form(nr=2)
+loginForm = detectLoginForm(session)
+if loginForm is None:
+    sys.exit("Could not find a login form. Rogers may have changed its site and an update to this app is required")
+
+session.form = loginForm
 session.form['USER'] = username
 session.form['password'] = password
 session.submit()
@@ -154,7 +166,7 @@ session.submit()
 # check if login was successful
 authent_cookies = [cookie for cookie in cj if cookie.name == 'SM_USERAUTHENTICATED']
 if len(authent_cookies) == 0:
-    sys.exit("Login failed")    
+    sys.exit("Login failed")
 else:
     # login was successful
     if not options.dont_save_login:
@@ -162,7 +174,7 @@ else:
             userconfig.add_section('myrogers_login')
             userconfig.set('myrogers_login', 'username', username)
             userconfig.write(open(configfile, 'w'))
-            
+
         if keyring_present and store_password:
             keyring.set_password('myrogers_login', username, password)
 
@@ -187,10 +199,10 @@ remaining_value = cap_value - usage_value
 
 if options.csv:
     output_string = str(usage_value) + "," + str(cap_value)
-    
+
     if not options.totals_only:
         output_string = str(download_value) + "," + str(upload_value) + "," + output_string + "," + str(remaining_value)
-        
+
     print output_string
 else:
     if not options.totals_only:
