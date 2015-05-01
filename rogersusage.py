@@ -7,8 +7,7 @@ import os
 import re
 import warnings
 from getpass import getpass
-import mechanize
-import cookielib
+import requests
 from BeautifulSoup import BeautifulSoup
 from optparse import OptionParser, OptionGroup
 from ConfigParser import SafeConfigParser
@@ -121,53 +120,13 @@ if password == None or password == '':
     password = getpass("Password: ")
     store_password = True
 
-# mechanize boilerplate from http://stockrt.github.com/p/emulating-a-browser-in-python-with-mechanize/
+login_post_url = 'https://www.rogers.com/siteminderagent/forms/login.fcc'
+login_post_data = {'USER': username, 'password': password, 'SMAUTHREASON': '0', 'target': '/web/RogersServices.portal/totes/#/accountOverview'}
 
-# Browser
-session = mechanize.Browser()
-
-# Cookie Jar
-cj = cookielib.LWPCookieJar()
-session.set_cookiejar(cj)
-
-# Browser options
-session.set_handle_equiv(True)
-session.set_handle_gzip(True)
-session.set_handle_redirect(True)
-session.set_handle_referer(True)
-session.set_handle_robots(False)
-
-# Follows refresh 0 but not hangs on refresh > 0
-session.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
-
-# Want debugging messages?
-#session.set_debug_http(True)
-#session.set_debug_redirects(True)
-#session.set_debug_responses(True)
-
-# end of mechanize set up
-
-# open usage page (sets cookies and redirect for post-login)
-session.open('https://www.rogers.com/web/myrogers/internetUsageBeta')
-
-# manually redirect to sign in page
-session.open('https://www.rogers.com/web/link/signin')
-
-# login form
-loginForm = detectLoginForm(session)
-if loginForm is None:
-    sys.exit("Could not find a login form. Rogers may have changed its site and an update to this app is required")
-
-session.form = loginForm
-session.form['USER'] = username
-session.form['password'] = password
-session.submit()
+auth_response = requests.post(login_post_url, data=login_post_data)
 
 # check if login was successful
-authent_cookies = [cookie for cookie in cj if cookie.name == 'SM_USERAUTHENTICATED']
-if len(authent_cookies) == 0:
-    sys.exit("Login failed")
-else:
+if 'SM_USERAUTHENTICATED' in auth_response.cookies.keys() and dict(auth_response.cookies)['SM_USERAUTHENTICATED'] == '1':
     # login was successful
     if not options.dont_save_login:
         if store_username:
@@ -178,8 +137,19 @@ else:
         if keyring_present and store_password:
             keyring.set_password('myrogers_login', username, password)
 
+elif 'SMTRYNO' in auth_response.cookies.keys():
+    sys.exit("Login failed, bad username and/or password")
+else:
+    sys.exit("Login failed. Rogers may have changed their site and this script requires updating.")
+
+# Get cookies from first load attempt
+data_response = requests.get('https://www.rogers.com/web/myrogers/internetUsageBeta', cookies=auth_response.cookies)
+
+# Manual redirect (Rogers uses Javascript redirects)
+data_response = requests.get('https://www.rogers.com/web/myrogers/internetUsageBeta', cookies=data_response.cookies)
+
 # parse for usage data
-soup = BeautifulSoup(session.response().read())
+soup = BeautifulSoup(data_response.content)
 table = soup.find("table", {"id": "usageInformation"})
 
 if table == None:
