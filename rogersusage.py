@@ -153,7 +153,7 @@ soup = BeautifulSoup(data_response.content)
 table = soup.find("table", {"id": "usageInformation"})
 
 if table == None:
-    print 'Could not get usage data. Please try again.'
+    print 'Could not get usage data. Rogers may have changed their site and this script requires updating.'
     sys.exit(1)
 
 download = table.findAll('tr')[1]
