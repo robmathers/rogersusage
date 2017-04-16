@@ -1,3 +1,6 @@
+# Currently Broken
+An update in 2016 to Rogers site broke this script, due to inability to scrape properly.
+
 # rogersusage.py
 A python script to get internet usage data for customers of [Rogers][] cable internet.
 
