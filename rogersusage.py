@@ -1,186 +1,227 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Rogers Internet Usage Parsing Script
 
-import sys
 import os
-import re
-import warnings
-from getpass import getpass
-import requests
-from BeautifulSoup import BeautifulSoup
 from optparse import OptionParser, OptionGroup
 from ConfigParser import SafeConfigParser
+from getpass import getpass
+import requests
 
-# try loading keyring module (https://bitbucket.org/kang/python-keyring-lib/)
-try:
-    import keyring
-except ImportError:
-    keyring_present = False
-else:
-    keyring_present = True
 
-# ignore gzip warning
-warnings.filterwarnings('ignore', 'gzip', UserWarning)
+def login(username, password):
+    """Attempts a login and returns cookies."""
+    login_url = "https://www.rogers.com/siteminderagent/forms/login.fcc"
+    target_url = "https://www.rogers.com:/web/RogersServices.portal/totes/#/accountOverview"
+    try:
+        response = requests.post(
+            url=login_url,
+            data={
+                "USER": username,
+                "password": password,
+                "target": target_url
+            },
+            allow_redirects=False
+        )
 
-# regex replacements
-def remove_html_tags(data):
-    p = re.compile(r'<.*?>')
-    return p.sub('', data)
+        # Manually handle redirect to send cookies
+        redirect_response = requests.get(
+            url=response.next.url,
+            cookies=response.cookies,
+            allow_redirects=False
+        )
 
-def remove_tabs(data):
-    p = re.compile(r'\t')
-    return p.sub('', data)
+        return redirect_response.cookies
 
-def remove_parens(data):
-    p = re.compile(r'\(.*\)')
-    return p.sub('', data)
+    except requests.exceptions.RequestException:
+        print('Login request failed')
 
-def correct_space(data):
-    p = re.compile(r'&nbsp;')
-    return p.sub(' ', data)
 
-def remove_units(data):
-    p = re.compile(r' GB')
-    return p.sub('', data)
+def account_number(login_cookies):
+    """
+    Returns an account number mostly likely to be associated with an internet account.
 
-def clean_output(data):
-    data = str(data)
-    data = remove_html_tags(data)
-    data = remove_tabs(data)
-    data = remove_parens(data)
-    data = correct_space(data)
-    data = os.linesep.join([s for s in data.splitlines() if s]) # remove empty lines
-    return data
+    login_cookies: a CookieJar from requests with authenticated session cookies.
+    """
+    url = 'https://www.rogers.com/web/RogersServices.portal/totes/api/v1/accountoverview'
 
-def detectLoginForm(session):
-    for form in session.forms():
-        for control in form.controls:
-            if isinstance(control, mechanize._form.PasswordControl) and control.id == 'txtPassWord':
-                return form
+    try:
+        response = requests.post(
+            url=url,
+            json={
+                'refresh': False,
+                'applicationId': 'Rogers.com'
+            },
+            cookies=login_cookies
+        )
+
+        if response.status_code == 200:
+            try:
+                account_info = response.json()
+                return parse_account_number(account_info)
+            except:
+                print "Error parsing account number"
+        else:
+            print("Error getting account number")
+
+    except requests.exceptions.RequestException:
+        print("Error getting account number")
 
     return None
 
-# define command line options
-parser = OptionParser()
-parser.add_option("-t", "--totals", action="store_true", dest="totals_only", help="Output only the total usage and usage allowance amounts.")
-parser.add_option("--csv", action="store_true", dest="csv", help="Print the data only (no labels or units) as comma-separated values. Format: Download,Upload,Total,Cap Amount. Units: GB. Useful for importing or parsing the data into other programs.")
-group = OptionGroup(parser, "Login Options", "If a login ID or password is provided, it will override any provided in the script file.")
-group.add_option("-l", "--login", action="store", dest="username", help="Rogers login ID")
-group.add_option("-p", "--password", action="store", dest="password", help="Rogers login password")
-group.add_option("--no-save", action="store_true", dest="dont_save_login", help="Don't save login details")
-parser.add_option_group(group)
+def parse_account_number(account_info):
+    """
+    Loops through sub-account numbers (phone and internet) to find the first possible internet account number.
+    """
+    for account in account_info['accountList']:
+        for sub_account in account['subNumbers']:
+            # per Rogers error messages, valid account numbers should be 9 or 12 digits
+            # helpfully this excludes phone numbers
+            if len(sub_account) == 9 or len(sub_account) == 12:
+                return sub_account
+    return None
 
-# initialize user/pass
-username = None
-password = None
 
-print_username_reminder = True
+def usage_data(account_number, login_cookies):
+    """
+    Returns a dictionary with usage data from Rogers.
 
-# parse command line options for login
-(options, args) = parser.parse_args()
-if options.username != None:
-    username = options.username
-    store_username = True
-if options.password != None:
-    password = options.password
+    Dictionary keys: cap, download, upload, total, start_date, end_date.
 
-# get username from config if it hasn't been loaded from command line
-configfile = os.path.expanduser('~/.rogersusage_config')
-userconfig = SafeConfigParser()
+    account_number: sub-account number for a Rogers Cable Internet subscription, distinct from the main billing account number.
+    """
 
-if username == None or username == '':
-    userconfig.read(configfile)
-    if userconfig.has_section('myrogers_login'):
-        username = userconfig.get('myrogers_login', 'username')
-        store_username = False
-    else:
-        #no username configured
-        store_username = True
+    url = 'https://www.rogers.com/web/RogersServices.portal/totes/api/v1/internetDashBoard/usage'
 
-# get username interactively if it hasn't been loaded yet
-if username == None or username == '':
-    username = raw_input("Login ID: ")
-    print_username_reminder = False
+    try:
+        response = requests.post(
+            url=url,
+            json={
+                'accountNumber': account_number,
+                'applicationId': 'Rogers.com'
+            },
+            cookies=login_cookies
+        )
 
-# get password from the keychain if possible
-if password == None or password == '':
-    if keyring_present:
-        if keyring.get_password('myrogers_login', username) != None:
-            password = keyring.get_password('myrogers_login', username)
-            store_password = False
+        if response.status_code == 200:
+            try:
+                usage_json = response.json()
+                current_usage = usage_json['internetUsageToolVO']['currentUsageSummaryVO']
+
+                usage = {
+                    'cap': usage_json['internetUsageTotal'],
+                    'download': current_usage['currentDownloadTotalUsage'],
+                    'upload': current_usage['currentUploadTotalUsage'],
+                    'total': usage_json['internetUsageUsed'],
+                    'start_date': current_usage['currentBillPeriodStartDate'],
+                    'end_date': current_usage['currentBillPeriodEndDate']
+                }
+                return usage
+            except:
+                print "Error parsing usage data. Rogers may have changed data formats. Please check for an update to rogersusage.py"
         else:
-            store_password = True
+            print("Error getting usage data")
 
-# if password isn't in the keychain, get it interactively
-if password == None or password == '':
-    if  print_username_reminder:
-        print "Login ID:", username
+    except requests.exceptions.RequestException:
+        print("Error getting usage data")
 
-    password = getpass("Password: ")
-    store_password = True
+    return None
 
-login_post_url = 'https://www.rogers.com/siteminderagent/forms/login.fcc'
-login_post_data = {'USER': username, 'password': password, 'SMAUTHREASON': '0', 'target': '/web/RogersServices.portal/totes/#/accountOverview'}
 
-auth_response = requests.post(login_post_url, data=login_post_data)
-
-# check if login was successful
-if 'SM_USERAUTHENTICATED' in auth_response.cookies.keys() and dict(auth_response.cookies)['SM_USERAUTHENTICATED'] == '1':
-    # login was successful
-    if not options.dont_save_login:
-        if store_username:
-            userconfig.add_section('myrogers_login')
-            userconfig.set('myrogers_login', 'username', username)
-            userconfig.write(open(configfile, 'w'))
-
-        if keyring_present and store_password:
-            keyring.set_password('myrogers_login', username, password)
-
-elif 'SMTRYNO' in auth_response.cookies.keys():
-    sys.exit("Login failed, bad username and/or password")
-else:
-    sys.exit("Login failed. Rogers may have changed their site and this script requires updating.")
-
-# Get cookies from first load attempt
-data_response = requests.get('https://www.rogers.com/web/myrogers/internetUsageBeta', cookies=auth_response.cookies)
-
-# Manual redirect (Rogers uses Javascript redirects)
-data_response = requests.get('https://www.rogers.com/web/myrogers/internetUsageBeta', cookies=data_response.cookies)
-
-# parse for usage data
-soup = BeautifulSoup(data_response.content)
-table = soup.find("table", {"id": "usageInformation"})
-
-if table == None:
-    print 'Could not get usage data. Rogers may have changed their site and this script requires updating.'
-    sys.exit(1)
-
-download = table.findAll('tr')[1]
-upload = table.findAll('tr')[2]
-usage = table.findAll('tr')[3]
-cap = table.findAll('tr')[4]
-
-download_value = float(remove_units(clean_output(download.findAll('td')[1])))
-upload_value = float(remove_units(clean_output(upload.findAll('td')[1])))
-usage_value = float(remove_units(clean_output(usage.findAll('td')[1])))
-cap_value = float(remove_units(clean_output(cap.findAll('td')[1])))
-remaining_value = cap_value - usage_value
-
-if options.csv:
-    output_string = str(usage_value) + "," + str(cap_value)
-
-    if not options.totals_only:
-        output_string = str(download_value) + "," + str(upload_value) + "," + output_string + "," + str(remaining_value)
-
-    print output_string
-else:
-    if not options.totals_only:
-        print clean_output(download)
-        print clean_output(upload)
-    print clean_output(usage)
-    print clean_output(cap)
-    if remaining_value < 0:
-        print 'Overage:\n' + str(abs(remaining_value)) + ' GB'
+def main():
+    """Main Function"""
+    # try loading keyring module (https://bitbucket.org/kang/python-keyring-lib/)
+    try:
+        import keyring
+    except ImportError:
+        keyring_present = False
     else:
-        print 'Remaining Usage:\n' + str(remaining_value) + ' GB'
+        keyring_present = True
+
+    # define command line options
+    parser = OptionParser()
+    parser.add_option("-t", "--totals", action="store_true", dest="totals_only", help="Output only the total usage and usage allowance amounts.")
+    parser.add_option("--csv", action="store_true", dest="csv", help="Print the data only (no labels or units) as comma-separated values. Format: Download,Upload,Total,Cap Amount. Units: GB. Useful for importing or parsing the data into other programs.")
+    group = OptionGroup(parser, "Login Options", "If a login ID or password is provided, it will override any provided in the script file.")
+    group.add_option("-l", "--login", action="store", dest="username", help="Rogers login ID")
+    group.add_option("-p", "--password", action="store", dest="password", help="Rogers login password")
+    group.add_option("--no-save", action="store_true", dest="dont_save_login", help="Don't save login details")
+    parser.add_option_group(group)
+
+    # initialize user/pass
+    username = None
+    password = None
+
+    print_username_reminder = True
+
+    # parse command line options for login
+    (options, args) = parser.parse_args()
+    if options.username != None:
+        username = options.username
+        store_username = True
+    if options.password != None:
+        password = options.password
+
+    # get username from config if it hasn't been loaded from command line
+    configfile = os.path.expanduser('~/.rogersusage_config')
+    userconfig = SafeConfigParser()
+
+    if username is None or username == '':
+        userconfig.read(configfile)
+        if userconfig.has_section('myrogers_login'):
+            username = userconfig.get('myrogers_login', 'username')
+            store_username = False
+        else:
+            # no username configured
+            store_username = True
+
+    # get username interactively if it hasn't been loaded yet
+    if username is None or username == '':
+        username = raw_input("Login ID: ")
+        print_username_reminder = False
+
+    # get password from the keychain if possible
+    if password is None or password == '':
+        if keyring_present:
+            if keyring.get_password('myrogers_login', username) != None:
+                password = keyring.get_password('myrogers_login', username)
+                store_password = False
+            else:
+                store_password = True
+
+    # if password isn't in the keychain, get it interactively
+    if password is None or password == '':
+        if  print_username_reminder:
+            print "Login ID:", username
+
+        password = getpass("Password: ")
+        store_password = True
+
+    # Log in and get the authentication cookies
+    login_cookies = login(username, password)
+    usage = usage_data(account_number(login_cookies), login_cookies)
+
+    remaining_value = usage['cap'] - usage['total']
+
+    if options.csv:
+        output_string = str(usage['total']) + "," + str(usage['cap'])
+
+        if not options.totals_only:
+            output_string = ','.join([str(usage['download']), str(usage['upload']), output_string, str(remaining_value)])
+
+        print output_string
+    else:
+        if not options.totals_only:
+            print 'Downloaded:', usage['download'], 'GB'
+            print 'Uploaded:', usage['upload'], 'GB'
+        print 'Total Usage:', usage['total'], 'GB'
+        print 'Usage Cap:', usage['cap'], 'GB'
+        if remaining_value < 0:
+            print 'Overage:',
+        else:
+            print 'Remaining Usage:',
+        print str(abs(remaining_value)), 'GB'
+
+
+if __name__ == '__main__':
+    main()
