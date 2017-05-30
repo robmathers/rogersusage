@@ -200,31 +200,30 @@ def main():
         password = getpass("Password: ")
         store_password = True
 
+    # Log in and get the authentication cookies
     login_cookies = login(username, password)
+    usage = usage_data(account_number(login_cookies), login_cookies)
 
-    download_value = ''
-    upload_value = ''
-    usage_value = ''
-    cap_value = ''
-    remaining_value = cap_value - usage_value
+    remaining_value = usage['cap'] - usage['total']
 
     if options.csv:
-        output_string = str(usage_value) + "," + str(cap_value)
+        output_string = str(usage['total']) + "," + str(usage['cap'])
 
         if not options.totals_only:
-            output_string = str(download_value) + "," + str(upload_value) + "," + output_string + "," + str(remaining_value)
+            output_string = ','.join([str(usage['download']), str(usage['upload']), output_string, str(remaining_value)])
 
         print output_string
     else:
         if not options.totals_only:
-            print download_value
-            print upload_value
-        print usage_value
-        print cap_value
+            print 'Downloaded:', usage['download'], 'GB'
+            print 'Uploaded:', usage['upload'], 'GB'
+        print 'Total Usage:', usage['total'], 'GB'
+        print 'Usage Cap:', usage['cap'], 'GB'
         if remaining_value < 0:
-            print 'Overage:\n' + str(abs(remaining_value)) + ' GB'
+            print 'Overage:',
         else:
-            print 'Remaining Usage:\n' + str(remaining_value) + ' GB'
+            print 'Remaining Usage:',
+        print str(abs(remaining_value)), 'GB'
 
 
 if __name__ == '__main__':
