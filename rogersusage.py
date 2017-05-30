@@ -3,10 +3,10 @@
 # Rogers Internet Usage Parsing Script
 
 import os
-from getpass import getpass
-import requests
 from optparse import OptionParser, OptionGroup
 from ConfigParser import SafeConfigParser
+from getpass import getpass
+import requests
 
 
 def login(username, password):
@@ -57,8 +57,8 @@ def account_number(login_cookies):
 
         if response.status_code == 200:
             try:
-            account_info = response.json()
-            return parse_account_number(account_info)
+                account_info = response.json()
+                return parse_account_number(account_info)
             except:
                 print "Error parsing account number"
         else:
@@ -166,22 +166,22 @@ def main():
     configfile = os.path.expanduser('~/.rogersusage_config')
     userconfig = SafeConfigParser()
 
-    if username == None or username == '':
+    if username is None or username == '':
         userconfig.read(configfile)
         if userconfig.has_section('myrogers_login'):
             username = userconfig.get('myrogers_login', 'username')
             store_username = False
         else:
-            #no username configured
+            # no username configured
             store_username = True
 
     # get username interactively if it hasn't been loaded yet
-    if username == None or username == '':
+    if username is None or username == '':
         username = raw_input("Login ID: ")
         print_username_reminder = False
 
     # get password from the keychain if possible
-    if password == None or password == '':
+    if password is None or password == '':
         if keyring_present:
             if keyring.get_password('myrogers_login', username) != None:
                 password = keyring.get_password('myrogers_login', username)
@@ -190,7 +190,7 @@ def main():
                 store_password = True
 
     # if password isn't in the keychain, get it interactively
-    if password == None or password == '':
+    if password is None or password == '':
         if  print_username_reminder:
             print "Login ID:", username
 
