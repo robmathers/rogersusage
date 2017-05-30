@@ -74,11 +74,11 @@ def parse_account_number(account_info):
     Loops through sub-account numbers (phone and internet) to find the first possible internet account number.
     """
     for account in account_info['accountList']:
-        for account_number in account['subNumbers']:
+        for sub_account in account['subNumbers']:
             # per Rogers error messages, valid account numbers should be 9 or 12 digits
             # helpfully this excludes phone numbers
-            if len(account_number) == 9 or len(account_number) == 12:
-                return account_number
+            if len(sub_account) == 9 or len(sub_account) == 12:
+                return sub_account
     return None
 
 
