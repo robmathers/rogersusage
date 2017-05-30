@@ -82,6 +82,52 @@ def parse_account_number(account_info):
     return None
 
 
+def usage_data(account_number, login_cookies):
+    """
+    Returns a dictionary with usage data from Rogers.
+
+    Dictionary keys: cap, download, upload, total, start_date, end_date.
+
+    account_number: sub-account number for a Rogers Cable Internet subscription, distinct from the main billing account number.
+    """
+
+    url = 'https://www.rogers.com/web/RogersServices.portal/totes/api/v1/internetDashBoard/usage'
+
+    try:
+        response = requests.post(
+            url=url,
+            json={
+                'accountNumber': account_number,
+                'applicationId': 'Rogers.com'
+            },
+            cookies=login_cookies
+        )
+
+        if response.status_code == 200:
+            try:
+                usage_json = response.json()
+                current_usage = usage_json['internetUsageToolVO']['currentUsageSummaryVO']
+
+                usage = {
+                    'cap': usage_json['internetUsageTotal'],
+                    'download': current_usage['currentDownloadTotalUsage'],
+                    'upload': current_usage['currentUploadTotalUsage'],
+                    'total': usage_json['internetUsageUsed'],
+                    'start_date': current_usage['currentBillPeriodStartDate'],
+                    'end_date': current_usage['currentBillPeriodEndDate']
+                }
+                return usage
+            except:
+                print "Error parsing usage data. Rogers may have changed data formats. Please check for an update to rogersusage.py"
+        else:
+            print("Error getting usage data")
+
+    except requests.exceptions.RequestException:
+        print("Error getting usage data")
+
+    return None
+
+
 def main():
     """Main Function"""
     # try loading keyring module (https://bitbucket.org/kang/python-keyring-lib/)
