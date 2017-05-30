@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Rogers Internet Usage Parsing Script
 
@@ -8,7 +8,6 @@ import re
 import warnings
 from getpass import getpass
 import requests
-from BeautifulSoup import BeautifulSoup
 from optparse import OptionParser, OptionGroup
 from ConfigParser import SafeConfigParser
 
@@ -22,44 +21,6 @@ else:
 
 # ignore gzip warning
 warnings.filterwarnings('ignore', 'gzip', UserWarning)
-
-# regex replacements
-def remove_html_tags(data):
-    p = re.compile(r'<.*?>')
-    return p.sub('', data)
-
-def remove_tabs(data):
-    p = re.compile(r'\t')
-    return p.sub('', data)
-
-def remove_parens(data):
-    p = re.compile(r'\(.*\)')
-    return p.sub('', data)
-
-def correct_space(data):
-    p = re.compile(r'&nbsp;')
-    return p.sub(' ', data)
-
-def remove_units(data):
-    p = re.compile(r' GB')
-    return p.sub('', data)
-
-def clean_output(data):
-    data = str(data)
-    data = remove_html_tags(data)
-    data = remove_tabs(data)
-    data = remove_parens(data)
-    data = correct_space(data)
-    data = os.linesep.join([s for s in data.splitlines() if s]) # remove empty lines
-    return data
-
-def detectLoginForm(session):
-    for form in session.forms():
-        for control in form.controls:
-            if isinstance(control, mechanize._form.PasswordControl) and control.id == 'txtPassWord':
-                return form
-
-    return None
 
 # define command line options
 parser = OptionParser()
@@ -148,23 +109,11 @@ data_response = requests.get('https://www.rogers.com/web/myrogers/internetUsageB
 # Manual redirect (Rogers uses Javascript redirects)
 data_response = requests.get('https://www.rogers.com/web/myrogers/internetUsageBeta', cookies=data_response.cookies)
 
-# parse for usage data
-soup = BeautifulSoup(data_response.content)
-table = soup.find("table", {"id": "usageInformation"})
 
-if table == None:
-    print 'Could not get usage data. Rogers may have changed their site and this script requires updating.'
-    sys.exit(1)
-
-download = table.findAll('tr')[1]
-upload = table.findAll('tr')[2]
-usage = table.findAll('tr')[3]
-cap = table.findAll('tr')[4]
-
-download_value = float(remove_units(clean_output(download.findAll('td')[1])))
-upload_value = float(remove_units(clean_output(upload.findAll('td')[1])))
-usage_value = float(remove_units(clean_output(usage.findAll('td')[1])))
-cap_value = float(remove_units(clean_output(cap.findAll('td')[1])))
+download_value = ''
+upload_value = ''
+usage_value = ''
+cap_value = ''
 remaining_value = cap_value - usage_value
 
 if options.csv:
@@ -176,10 +125,10 @@ if options.csv:
     print output_string
 else:
     if not options.totals_only:
-        print clean_output(download)
-        print clean_output(upload)
-    print clean_output(usage)
-    print clean_output(cap)
+        print download_value
+        print upload_value
+    print usage_value
+    print cap_value
     if remaining_value < 0:
         print 'Overage:\n' + str(abs(remaining_value)) + ' GB'
     else:
