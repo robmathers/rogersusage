@@ -56,8 +56,11 @@ def account_number(login_cookies):
         )
 
         if response.status_code == 200:
+            try:
             account_info = response.json()
             return parse_account_number(account_info)
+            except:
+                print "Error parsing account number"
         else:
             print("Error getting account number")
 
