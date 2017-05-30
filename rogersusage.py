@@ -12,6 +12,34 @@ from optparse import OptionParser, OptionGroup
 from ConfigParser import SafeConfigParser
 
 
+def login(username, password):
+    """Attempts a login and returns cookies."""
+    login_url = "https://www.rogers.com/siteminderagent/forms/login.fcc"
+    target_url = "https://www.rogers.com:/web/RogersServices.portal/totes/#/accountOverview"
+    try:
+        response = requests.post(
+            url=login_url,
+            data={
+                "USER": username,
+                "password": password,
+                "target": target_url
+            },
+            allow_redirects=False
+        )
+
+        # Manually handle redirect to send cookies
+        redirect_response = requests.get(
+            url=response.next.url,
+            cookies=response.cookies,
+            allow_redirects=False
+        )
+
+        return redirect_response.cookies
+
+    except requests.exceptions.RequestException:
+        print('Login request failed')
+
+
 def main():
     """Main Function"""
     # try loading keyring module (https://bitbucket.org/kang/python-keyring-lib/)
@@ -84,34 +112,7 @@ def main():
         password = getpass("Password: ")
         store_password = True
 
-    login_post_url = 'https://www.rogers.com/siteminderagent/forms/login.fcc'
-    login_post_data = {'USER': username, 'password': password, 'SMAUTHREASON': '0', 'target': '/web/RogersServices.portal/totes/#/accountOverview'}
-
-    auth_response = requests.post(login_post_url, data=login_post_data)
-
-    # check if login was successful
-    if 'SM_USERAUTHENTICATED' in auth_response.cookies.keys() and dict(auth_response.cookies)['SM_USERAUTHENTICATED'] == '1':
-        # login was successful
-        if not options.dont_save_login:
-            if store_username:
-                userconfig.add_section('myrogers_login')
-                userconfig.set('myrogers_login', 'username', username)
-                userconfig.write(open(configfile, 'w'))
-
-            if keyring_present and store_password:
-                keyring.set_password('myrogers_login', username, password)
-
-    elif 'SMTRYNO' in auth_response.cookies.keys():
-        sys.exit("Login failed, bad username and/or password")
-    else:
-        sys.exit("Login failed. Rogers may have changed their site and this script requires updating.")
-
-    # Get cookies from first load attempt
-    data_response = requests.get('https://www.rogers.com/web/myrogers/internetUsageBeta', cookies=auth_response.cookies)
-
-    # Manual redirect (Rogers uses Javascript redirects)
-    data_response = requests.get('https://www.rogers.com/web/myrogers/internetUsageBeta', cookies=data_response.cookies)
-
+    login_cookies = login(username, password)
 
     download_value = ''
     upload_value = ''
