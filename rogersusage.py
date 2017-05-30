@@ -40,6 +40,48 @@ def login(username, password):
         print('Login request failed')
 
 
+def account_number(login_cookies):
+    """
+    Returns an account number mostly likely to be associated with an internet account.
+
+    login_cookies: a CookieJar from requests with authenticated session cookies.
+    """
+    url = 'https://www.rogers.com/web/RogersServices.portal/totes/api/v1/accountoverview'
+
+    try:
+        response = requests.post(
+            url=url,
+            json={
+                'refresh': False,
+                'applicationId': 'Rogers.com'
+            },
+            cookies=login_cookies
+        )
+
+        if response.status_code == 200:
+            account_info = response.json()
+            return parse_account_number(account_info)
+        else:
+            print("Error getting account number")
+
+    except requests.exceptions.RequestException:
+        print("Error getting account number")
+
+    return None
+
+def parse_account_number(account_info):
+    """
+    Loops through sub-account numbers (phone and internet) to find the first possible internet account number.
+    """
+    for account in account_info['accountList']:
+        for account_number in account['subNumbers']:
+            # per Rogers error messages, valid account numbers should be 9 or 12 digits
+            # helpfully this excludes phone numbers
+            if len(account_number) == 9 or len(account_number) == 12:
+                return account_number
+    return None
+
+
 def main():
     """Main Function"""
     # try loading keyring module (https://bitbucket.org/kang/python-keyring-lib/)
