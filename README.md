@@ -1,13 +1,12 @@
-# Currently Broken
-An update in 2016 to Rogers site broke this script, due to inability to scrape properly.
-
 # rogersusage.py
 A python script to get internet usage data for customers of [Rogers][] cable internet.
 
+## History
+**May 30, 2017:** Updated to v2.0, which fixes the script after changes to the Rogers site broke the old version.
+
 ## Requirements
- - [Python][python]. I have only tested this with 2.7.1 on OS X (the Apple supplied build) and 2.6.5 on Ubuntu. I'm not doing anything overly crazy, so chances are it will work on any relatively modern version, but I make no guarantees.
+ - [Python 2.7][python]. If your Python environment defaults to Python 3, you may need to explicitly run it with Python 2.7.
  - [requests][]. Installed via `pip install requests`, `easy_install` or from [source][requests source].
- - [BeautifulSoup][] for HTML parsing. `easy_install BeautifulSoup`, or download from [the project site][soup dl].
  - A login for the [My Rogers][] site, used for managing your Rogers account.
  - *Optional:* the [keyring][] library. If installed, the keyring will be used to securely store passwords. The storage mechanism depends on what OS you're running—on Mac OS X, it uses the system Keychain; read the keyring lib documentation for full details.
 
@@ -17,8 +16,6 @@ Open a command prompt, and run `python rogersusage.py`. Provide the full paths t
 
 ### Configuration
 The script will prompt for a My Rogers login ID (typically an email address) and password. You can also provide one with the command line parameters: `-l USERNAME` (or `--login=USERNAME`) and `-p PASSWORD` (or `--password=PASSWORD`). These will supersede any stored login details.
-
- Upon a successful login, the script stores the login ID for later use. If the keyring library is installed, it will also securely store your password. This behaviour can be disabled by using the `--no-save` option.
 
 ### Options
  - `-h`, `--help`
@@ -31,29 +28,19 @@ The script will prompt for a My Rogers login ID (typically an email address) and
     - Rogers login ID
  - `-p PASSWORD`, `--password=PASSWORD`
     - Rogers login password
- - `--no-save`
-    - Don't save login details
 
 ### Sample Output
-    Download Usage:
-    50.38 GB
-    Upload Usage:
-    11.26 GB
-    Total Usage:
-    61.64 GB
-    Usage Allowance:
-    120 GB
-    Remaining Usage:
-    58.36 GB
+    Uploaded: 18.85 GB
+    Total Usage: 125.98 GB
+    Usage Cap: 200.0 GB
+    Remaining Usage: 74.02 GB
 
 ## Notes
-This is provided as-is, with no warranty or guarantee of any kind it will work. Hopefully someone else will find it useful. It's scraping HTML to get the data, so it will likely break if Rogers makes changes to their site.
+This is provided as-is, with no warranty or guarantee of any kind it will work. Hopefully someone else will find it useful. It uses an undocumented and unsupported API from Rogers, so any changes they make could break things in the future.
 
-[BeautifulSoup]: http://www.crummy.com/software/BeautifulSoup/
-[soup dl]: http://www.crummy.com/software/BeautifulSoup/#Download
-[python]: http://www.python.org/
-[rogers]: http://www.rogers.com
-[my rogers]: https://www.rogers.com/web/RogersServices.portal?_nfpb=true&amp;_pageLabel=My%20Rogers_Home
+[python]: https://www.python.org/
+[rogers]: https://www.rogers.com
+[my rogers]: https://www.rogers.com/web/totes/#/signin
 [requests]: http://docs.python-requests.org/en/latest/
 [requests source]: https://github.com/kennethreitz/requests
-[keyring]: https://bitbucket.org/kang/python-keyring-lib/
+[keyring]: https://github.com/jaraco/keyring
