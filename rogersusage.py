@@ -2,10 +2,7 @@
 
 # Rogers Internet Usage Parsing Script
 
-import sys
 import os
-import re
-import warnings
 from getpass import getpass
 import requests
 from optparse import OptionParser, OptionGroup
@@ -137,9 +134,6 @@ def main():
         keyring_present = False
     else:
         keyring_present = True
-
-    # ignore gzip warning
-    warnings.filterwarnings('ignore', 'gzip', UserWarning)
 
     # define command line options
     parser = OptionParser()
