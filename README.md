@@ -36,7 +36,7 @@ The script will prompt for a My Rogers login ID (typically an email address) and
     Remaining Usage: 74.02 GB
 
 ## Notes
-This is provided as-is, with no warranty or guarantee of any kind it will work. Hopefully someone else will find it useful. It uses an undocumented and unsupported API from Rogers, so any changes they make could break things in the future.
+This is provided as-is, with no warranty or guarantee of any kind it will work. Hopefully someone else will find it useful. It uses an undocumented and unsupported API from Rogers, any changes could break things in the future.
 
 [python]: https://www.python.org/
 [rogers]: https://www.rogers.com
