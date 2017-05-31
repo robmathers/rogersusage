@@ -2,7 +2,8 @@
 A python script to get internet usage data for customers of [Rogers][] cable internet.
 
 ## History
-**May 30, 2017:** Updated to v2.0, which fixes the script after changes to the Rogers site broke the old version.
+- **May 30, 2017:** Updated to v2.0, which fixes the script after changes to the Rogers site broke the old version.
+- **2.0.1:** Restored compatibility with request versions below 2.15
 
 ## Requirements
  - [Python 2.7][python]. If your Python environment defaults to Python 3, you may need to explicitly run it with Python 2.7.
