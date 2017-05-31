@@ -25,8 +25,14 @@ def login(username, password):
         )
 
         # Manually handle redirect to send cookies
+        try:
+            redirect_url = response.next.url
+        # Python requests < 2.15 doesn't have the Response.next property
+        except AttributeError:
+            from urlparse import urljoin
+            redirect_url = urljoin(response.url, response.headers.get('Location'))
         redirect_response = requests.get(
-            url=response.next.url,
+            url=redirect_url,
             cookies=response.cookies,
             allow_redirects=False
         )
@@ -68,6 +74,7 @@ def account_number(login_cookies):
         print("Error getting account number")
 
     return None
+
 
 def parse_account_number(account_info):
     """
