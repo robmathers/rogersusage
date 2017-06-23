@@ -123,6 +123,11 @@ def usage_data(account_number, login_cookies):
                     'start_date': current_usage['currentBillPeriodStartDate'],
                     'end_date': current_usage['currentBillPeriodEndDate']
                 }
+
+                if usage_json['isInternetUsageUnlimited']:
+                    usage['unlimited'] = True
+                    usage['cap'] = 0
+
                 return usage
             except:
                 print "Error parsing usage data. Rogers may have changed data formats. Please check for an update to rogersusage.py"
@@ -208,7 +213,10 @@ def main():
     login_cookies = login(username, password)
     usage = usage_data(account_number(login_cookies), login_cookies)
 
-    remaining_value = usage['cap'] - usage['total']
+    if not usage['unlimited']:
+        remaining_value = usage['cap'] - usage['total']
+    else:
+        remaining_value = ''
 
     if options.csv:
         output_string = str(usage['total']) + "," + str(usage['cap'])
@@ -222,12 +230,15 @@ def main():
             print 'Downloaded:', usage['download'], 'GB'
             print 'Uploaded:', usage['upload'], 'GB'
         print 'Total Usage:', usage['total'], 'GB'
-        print 'Usage Cap:', usage['cap'], 'GB'
-        if remaining_value < 0:
-            print 'Overage:',
+        if not usage['unlimited']:
+            print 'Usage Cap:', usage['cap'], 'GB'
+            if remaining_value < 0:
+                print 'Overage:',
+            else:
+                print 'Remaining Usage:',
+            print str(abs(remaining_value)), 'GB'
         else:
-            print 'Remaining Usage:',
-        print str(abs(remaining_value)), 'GB'
+            print 'Usage Cap: Unlimited'
 
 
 if __name__ == '__main__':

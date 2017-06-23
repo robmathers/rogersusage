@@ -3,7 +3,8 @@ A python script to get internet usage data for customers of [Rogers][] cable int
 
 ## History
 - **May 30, 2017:** Updated to v2.0, which fixes the script after changes to the Rogers site broke the old version.
-- **2.0.1:** Restored compatibility with request versions below 2.15
+- **2.0.1:** Restored compatibility with requests versions below 2.15.
+- **2.0.2:** Improved output of cap information on unlimited plans.
 
 ## Requirements
  - [Python 2.7][python]. If your Python environment defaults to Python 3, you may need to explicitly run it with Python 2.7.
@@ -24,7 +25,7 @@ The script will prompt for a My Rogers login ID (typically an email address) and
  - `-t`, `--totals`
     - Output only the total usage and usage allowance amounts.
  - `--csv`
-    - Print the data only (no labels or units) as comma-separated values. Format: Download,Upload,Total,Cap Amount,Remaining Usage. Units: GB. Useful for importing or parsing the data into other programs.
+    - Print the data only (no labels or units) as comma-separated values. Format: Download,Upload,Total,Cap Amount,Remaining Usage. Units: GB. Useful for importing or parsing the data into other programs. Remaining usage will be empty on unlimited plans.
  - `-l USERNAME`, `--login=USERNAME`
     - Rogers login ID
  - `-p PASSWORD`, `--password=PASSWORD`
