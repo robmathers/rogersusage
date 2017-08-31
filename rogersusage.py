@@ -37,6 +37,10 @@ def login(username, password):
             allow_redirects=False
         )
 
+        # Rogers site was inconsistently setting cookies on the second request, so if there is no session cookie, get it from the first request
+        if not redirect_response.cookies.get('SMSESSION'):
+            redirect_response.cookies.set('SMSESSION', response.cookies.get('SMSESSION'))
+
         return redirect_response.cookies
 
     except requests.exceptions.RequestException:

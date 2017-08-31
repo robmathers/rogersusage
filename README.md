@@ -5,6 +5,7 @@ A python script to get internet usage data for customers of [Rogers][] cable int
 - **May 30, 2017:** Updated to v2.0, which fixes the script after changes to the Rogers site broke the old version.
 - **2.0.1:** Restored compatibility with requests versions below 2.15.
 - **2.0.2:** Improved output of cap information on unlimited plans.
+- **2.0.3:** Workaround for inconsistencies in Rogers authentication process
 
 ## Requirements
  - [Python 2.7][python]. If your Python environment defaults to Python 3, you may need to explicitly run it with Python 2.7.
