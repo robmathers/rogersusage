@@ -131,6 +131,8 @@ def usage_data(account_number, login_cookies):
                 if usage_json['isInternetUsageUnlimited']:
                     usage['unlimited'] = True
                     usage['cap'] = 0
+                else:
+                    usage['unlimited'] = False
 
                 return usage
             except:
